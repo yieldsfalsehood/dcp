@@ -1,2 +1,4 @@
 # dcp
-The database copy tool; copies data between two databases with similar schemas, across relations.
+
+The database copy tool. Copy data between databases intelligently, using the
+schema's structure.
