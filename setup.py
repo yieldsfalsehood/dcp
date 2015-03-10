@@ -29,6 +29,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'setuptools',
+        'configparser',
+        'jsonschema',
     ],
     tests_require=[
         'mock',
