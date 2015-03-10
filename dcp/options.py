@@ -33,7 +33,9 @@ def parser():
     Returns a command line parser.
     '''
     # Create the parser.
-    parser = argparse.ArgumentParser(description=DESCRIPTION)
+    formatter = argparse.RawTextHelpFormatter
+    parser = argparse.ArgumentParser(description=DESCRIPTION,
+                                     formatter_class=formatter)
 
     # Add source and destination databases.
     help = 'The source database.'
@@ -44,7 +46,7 @@ def parser():
     # Add query specific parameters.
     help = 'The target table.'
     parser.add_argument('table', type=str, help=help)
-    help = ('The query in the format of column=value. Multiple column value '
+    help = ('The query in the format of column=value. Multiple\ncolumn value '
             'pairs can be specified.')
     parser.add_argument('columns', type=str, help=help, nargs='+')
 
