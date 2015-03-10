@@ -48,5 +48,11 @@ def parser():
             'pairs can be specified.')
     parser.add_argument('columns', type=str, help=help, nargs='+')
 
+    # Add the log level.
+    name = '--log-level'
+    help = 'The log level.'
+    choices = ('debug', 'info', 'warning', 'error', 'critical')
+    parser.add_argument(name, choices=choices, default='warning', help=help)
+
     # Parse arguments and return.
     return parser
