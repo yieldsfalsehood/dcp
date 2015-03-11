@@ -6,7 +6,7 @@ import unittest
 from mock import patch
 
 # To be tested.
-from dcp import options, utils, exceptions
+from dcp import options, utils, exceptions, config
 
 
 class Options(unittest.TestCase):
@@ -161,6 +161,31 @@ class Exceptions(unittest.TestCase):
         with self.assertRaisesRegexp(target, 'test'):
             with utils.reraise(ValueError, target):
                 raise ValueError('test')
+
+
+class Config(unittest.TestCase):
+    '''
+    Tests for functions in the config module.
+    '''
+    def test_format(self):
+        '''
+        Format a well formed configuration.
+        '''
+        # Create test data.
+        value = '''
+            table1:column1 = table2:column2
+            table1:column1 = table3:column2
+        '''
+
+        # Perform the test.
+        result = config.format(value)
+
+        # Check the result.
+        expected = (
+            (('table1', 'column1'), ('table2', 'column2')),
+            (('table1', 'column1'), ('table3', 'column2')),
+        )
+        self.assertEqual(result, expected)
 
 
 # Run the tests if the file is called directly.

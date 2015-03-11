@@ -37,7 +37,7 @@ def format(value):
     # Split lines in = first and then by :.
     return tuple(
         tuple(split(':', part) for part in split('=', line))
-        for line in value.strip().split()
+        for line in value.strip().splitlines()
     )
 
 
