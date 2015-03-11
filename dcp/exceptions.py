@@ -15,5 +15,5 @@ class BadConfig(Exception):
     '''
     Raised when a database configuration is bad.
     '''
-    def __init__(self, src, name, path):
+    def __init__(self, src):
         super(Exception, self).__init__(src.message)

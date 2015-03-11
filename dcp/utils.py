@@ -36,6 +36,15 @@ def reraise(src, dest, *args, **kwargs):
         raise dest(exception, *args, **kwargs)
 
 
+class Identity(Exception):
+    '''
+    Used in conjunction with reraise. This exception casts the original
+    exception as a string and raises a new exception with that string.
+    '''
+    def __init__(self, src):
+        super(Exception, self).__init__(str(src))
+
+
 @contextmanager
 def catch(exceptions):
     '''
