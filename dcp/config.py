@@ -62,6 +62,7 @@ def database(name, config):
         result['unlink'] = format(database['unlink'])
 
     except KeyError:
+        # Overrides are optional.
         pass
 
     return result

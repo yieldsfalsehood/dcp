@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from dcp.utils import IdentityError
+
 
 class NoDatabase(Exception):
     '''
@@ -11,9 +13,8 @@ class NoDatabase(Exception):
         super(Exception, self).__init__(message % (name, path))
 
 
-class BadConfig(Exception):
+class BadConfig(IdentityError):
     '''
     Raised when a database configuration is bad.
     '''
-    def __init__(self, src):
-        super(Exception, self).__init__(src.message)
+    pass

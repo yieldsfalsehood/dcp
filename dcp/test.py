@@ -6,7 +6,7 @@ import unittest
 from mock import patch
 
 # To be tested.
-from dcp import options, utils
+from dcp import options, utils, exceptions
 
 
 class Options(unittest.TestCase):
@@ -77,7 +77,7 @@ class Utils(unittest.TestCase):
         exception is raised.
         '''
         # Create a test class.
-        class Test(utils.Identity):
+        class Test(utils.IdentityError):
             pass
 
         # Perform the test.
@@ -90,7 +90,7 @@ class Utils(unittest.TestCase):
         Raise an exception not related to the reraise trap.
         '''
         # Create a test class.
-        class Test(utils.Identity):
+        class Test(utils.IdentityError):
             pass
 
         # Perform the test.
@@ -129,6 +129,38 @@ class Utils(unittest.TestCase):
         # Check the result.
         self.assertFalse(logging.exception.called)
         self.assertFalse(sys.exit.called)
+
+
+class Exceptions(unittest.TestCase):
+    '''
+    Tests for functions in the exceptions module. These tests are mostly
+    for exception constructors used with the reraise utility.
+    '''
+    def test_no_database(self):
+        '''
+        Convert a ValueError into a NoDatabase exception.
+        '''
+        # Create test data.
+        target = exceptions.NoDatabase
+        name = 'name'
+        path = 'path'
+
+        # Perform the test.
+        with self.assertRaisesRegexp(target, 'not found'):
+            with utils.reraise(ValueError, target, name, path):
+                raise ValueError('test')
+
+    def test_bad_config(self):
+        '''
+        Test a bad configuration.
+        '''
+        # Create test data.
+        target = exceptions.BadConfig
+
+        # Perform the test.
+        with self.assertRaisesRegexp(target, 'test'):
+            with utils.reraise(ValueError, target):
+                raise ValueError('test')
 
 
 # Run the tests if the file is called directly.
