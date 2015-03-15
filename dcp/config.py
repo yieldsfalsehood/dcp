@@ -5,6 +5,7 @@ import configparser
 from os.path import expanduser
 import jsonschema
 from jsonschema import ValidationError
+from logging import warning
 
 from dcp import utils
 from dcp.exceptions import NoDatabase, BadConfig
@@ -27,18 +28,22 @@ def format(value):
     '''
     Formats the link value into the format expected by parse.
     '''
-    # Functional helper functions.
-    def strip(item):
-        return item.strip()
+    result = []
+    for line in value.strip().splitlines():
+        # Test the config.
+        if not (line.count('=') == 1 and line.count(':') == 2):
+            warning('Ignoring invalid configuration: %s', line.strip())
+            continue
 
-    def split(char, item):
-        return tuple(strip(part) for part in item.split(char, 1))
+        # Split helper.
+        def split(item, char):
+            return tuple(item.strip().split(char))
 
-    # Split lines in = first and then by :.
-    return tuple(
-        tuple(split(':', part) for part in split('=', line))
-        for line in value.strip().splitlines()
-    )
+        # Append the result.
+        left, right = split(line, '=')
+        result.append((split(left, ':'), split(right, ':')))
+
+    return tuple(result)
 
 
 def database(name, config):
@@ -56,14 +61,11 @@ def database(name, config):
     # The overrides are optional.
     result = {'dsn': database['dsn']}
 
-    try:
-        # Add the overrides.
+    # Add the overrides.
+    with utils.suppress(KeyError):
         result['link'] = format(database['link'])
+    with utils.suppress(KeyError):
         result['unlink'] = format(database['unlink'])
-
-    except KeyError:
-        # Overrides are optional.
-        pass
 
     return result
 

@@ -4,6 +4,7 @@
 import sys
 import logging
 from contextlib import contextmanager
+from collections import Iterable
 
 
 def set_log_level(level):
@@ -20,22 +21,6 @@ def set_log_level(level):
     logging.basicConfig(level=lookup[level])
 
 
-@contextmanager
-def reraise(src, dest, *args, **kwargs):
-    '''
-    Catches and swaps src with dest. dest is a function of the form:
-
-    exception = dest(exception, *args, **kwargs)
-
-    exception is raised.
-    '''
-    try:
-        yield
-
-    except src as exception:
-        raise dest(exception, *args, **kwargs)
-
-
 class IdentityError(Exception):
     '''
     Used in conjunction with reraise. This exception casts the original
@@ -45,10 +30,22 @@ class IdentityError(Exception):
         super(Exception, self).__init__(src.message)
 
 
-@contextmanager
-def catch(exceptions):
+def iter(target):
     '''
-    Catches, logs and suppresses the list of exceptions.
+    If target is already iterable and not a string, target is returned.
+    Otherwise tuple(target) is returned.
+    '''
+    if isinstance(target, Iterable) and not isinstance(target, str):
+        return target
+
+    return (target, )
+
+
+@contextmanager
+def trap(trigger, *exceptions):
+    '''
+    Runs the trigger when the exception is trapped. trigger is a function
+    that accepts the trapped exception instance as a parameter.
     '''
     try:
         yield
@@ -61,6 +58,53 @@ def catch(exceptions):
         if not any(tests):
             raise
 
-        # Log the exception and exit.
+        # Trigger the trap.
+        trigger(exception)
+
+
+@contextmanager
+def reraise(src, dest, *args, **kwargs):
+    '''
+    Catches and swaps srcs with dest. srcs is either an iterable or single
+    class of exception.
+
+    exception = dest(exception, *args, **kwargs)
+
+    exception is raised.
+    '''
+    # Raise the new exception.
+    def trigger(exception):
+        raise dest(exception, *args, **kwargs)
+
+    # Trap the exception.
+    with trap(trigger, *iter(src)):
+        yield
+
+
+@contextmanager
+def catch(*exceptions):
+    '''
+    Catches, logs and suppresses the list of exceptions.
+    '''
+    # Log the exception and exit.
+    def trigger(exception):
         logging.exception(exception)
         sys.exit(1)
+
+    # Trap the exception.
+    with trap(trigger, *exceptions):
+        yield
+
+
+@contextmanager
+def suppress(*exceptions):
+    '''
+    Catches, logs and suppresses the list of exceptions.
+    '''
+    # Suppress the exception.
+    def trigger(exception):
+        pass
+
+    # Trap the exception.
+    with trap(trigger, *exceptions):
+        yield

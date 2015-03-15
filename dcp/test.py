@@ -3,7 +3,8 @@
 
 # Testing tools.
 import unittest
-from mock import patch
+from mock import patch, call, MagicMock
+from dcp.exceptions import NoDatabase, BadConfig
 
 # To be tested.
 from dcp import options, utils, exceptions, config
@@ -71,6 +72,50 @@ class Utils(unittest.TestCase):
             utils.set_log_level(level)
             logging.basicConfig.assert_called_with(level=expected)
 
+    def test_iter(self):
+        '''
+        Converts a number of values to iterables.
+        '''
+        # Create tests.
+        tests = (
+            ('test', ('test', )),
+            ([1, 2, 3], [1, 2, 3]),
+            (1, (1, )),
+        )
+
+        # Check the result.
+        for test, expected in tests:
+            self.assertEqual(utils.iter(test), expected)
+
+    def test_trap(self):
+        '''
+        Trap an exception.
+        '''
+        # Create fake data.
+        trigger = MagicMock()
+
+        # Perform the test.
+        with utils.trap(trigger, ValueError, KeyError):
+            raise ValueError('test')
+
+        # Check the result.
+        self.assertTrue(trigger.called)
+
+    def test_trap_miss(self):
+        '''
+        Trap an exception.
+        '''
+        # Create fake data.
+        trigger = MagicMock()
+
+        # Perform the test.
+        with self.assertRaisesRegexp(KeyError, 'test'):
+            with utils.trap(trigger, ValueError):
+                raise KeyError('test')
+
+        # Check the result.
+        self.assertFalse(trigger.called)
+
     def test_reraise(self):
         '''
         Raise an exception, make sure it is suppressed and an alternative
@@ -85,19 +130,6 @@ class Utils(unittest.TestCase):
             with utils.reraise(ValueError, Test):
                 raise ValueError('test')
 
-    def test_reraise_miss(self):
-        '''
-        Raise an exception not related to the reraise trap.
-        '''
-        # Create a test class.
-        class Test(utils.IdentityError):
-            pass
-
-        # Perform the test.
-        with self.assertRaisesRegexp(KeyError, 'test'):
-            with utils.reraise(ValueError, Test):
-                raise KeyError('test')
-
     @patch('dcp.utils.logging')
     @patch('dcp.utils.sys')
     def test_catch(self, sys, logging):
@@ -108,27 +140,20 @@ class Utils(unittest.TestCase):
         exception = ValueError('test')
 
         # Perform the test.
-        with utils.catch((ValueError, )):
+        with utils.catch(ValueError):
             raise exception
 
         # Check the result.
         logging.exception.assert_called_once_with(exception)
         sys.exit.assert_called_once_with(1)
 
-    @patch('dcp.utils.logging')
-    @patch('dcp.utils.sys')
-    def test_catch_miss(self, sys, logging):
+    def test_suppress(self):
         '''
-        Pass an exception that isn't in the catch trap.
+        Suppress an exception.
         '''
         # Perform the test.
-        with self.assertRaisesRegexp(KeyError, 'test'):
-            with utils.catch((ValueError, )):
-                raise KeyError('test')
-
-        # Check the result.
-        self.assertFalse(logging.exception.called)
-        self.assertFalse(sys.exit.called)
+        with utils.suppress(ValueError, KeyError):
+            raise ValueError('test')
 
 
 class Exceptions(unittest.TestCase):
@@ -186,6 +211,102 @@ class Config(unittest.TestCase):
             (('table1', 'column1'), ('table3', 'column2')),
         )
         self.assertEqual(result, expected)
+
+    @patch('dcp.config.warning')
+    def test_bad_format(self, warning):
+        '''
+        Format a misformed configuration.
+        '''
+        # Create test data.
+        value = '''
+            table1:column1 table2:column2
+            table1:column1 = table3column2
+            table1:column1 = table3:column2
+        '''
+
+        # Perform the test.
+        result = config.format(value)
+
+        # Make sure the warnings were logged.
+        message = 'Ignoring invalid configuration: %s'
+        expected = [
+            call(message, 'table1:column1 table2:column2'),
+            call(message, 'table1:column1 = table3column2')
+        ]
+        warning.assert_has_calls(expected)
+
+        # Check the result.
+        expected = ((('table1', 'column1'), ('table3', 'column2')),)
+        self.assertEqual(result, expected)
+
+    def test_database(self):
+        '''
+        Parses a well formed database configuration.
+        '''
+        # Create test data.
+        name = 'test'
+        _config = {
+            'test': {
+                'dsn': 'dsn',
+                'link': 'table1:column1 = table2:column2',
+                'unlink': 'table1:column1 = table3:column2',
+            },
+        }
+
+        # Perform the test.
+        result = config.database(name, _config)
+
+        # Check the result.
+        expected = {
+            'dsn': 'dsn',
+            'link': ((('table1', 'column1'), ('table2', 'column2')),),
+            'unlink': ((('table1', 'column1'), ('table3', 'column2')),),
+        }
+        self.assertEqual(result, expected)
+
+    def test_no_database(self):
+        '''
+        The config lacks the target database.
+        '''
+        # Create test data.
+        name = 'test'
+        _config = {}
+
+        # Perform the test.
+        with self.assertRaises(NoDatabase):
+            config.database(name, _config)
+
+    def test_bad_config(self):
+        '''
+        The database configuration is invalid.
+        '''
+        # Create test data.
+        name = 'test'
+        _config = {'test': {}, }
+
+        # Perform the test.
+        with self.assertRaises(BadConfig):
+            config.database(name, _config)
+
+    def test_optional_config(self):
+        '''
+        The link and unlink properties are optional.
+        '''
+        # Create test data.
+        _config = {
+            'link': {
+                'dsn': 'dsn',
+                'link': 'table1:column1 = table2:column2',
+            },
+            'unlink': {
+                'dsn': 'dsn',
+                'unlink': 'table1:column1 = table2:column2',
+            },
+        }
+
+        # Perform the test. No exceptions should be raised.
+        for name in ('link', 'unlink'):
+            config.database(name, _config)
 
 
 # Run the tests if the file is called directly.
