@@ -7,8 +7,8 @@ import jsonschema
 from jsonschema import ValidationError
 from logging import warning
 
-from dcp import utils
-from dcp.exceptions import NoDatabase, BadConfig, InvalidTargets
+from dcp.utils import misc
+from dcp.utils.exceptions import NoDatabase, BadConfig, InvalidTargets
 
 
 PATH = '~/.dcp'
@@ -51,20 +51,20 @@ def database(name, config):
     Extracts and formats the configuration as expected by parse.
     '''
     # Get the target database.
-    with utils.reraise(KeyError, NoDatabase, name, PATH):
+    with misc.reraise(KeyError, NoDatabase, name, PATH):
         database = config[name]
 
     # Validate the database.
-    with utils.reraise(ValidationError, BadConfig):
+    with misc.reraise(ValidationError, BadConfig):
         jsonschema.validate(dict(database), SCHEMA)
 
     # The overrides are optional.
     result = {'dsn': database['dsn']}
 
     # Add the overrides.
-    with utils.suppress(KeyError):
+    with misc.suppress(KeyError):
         result['link'] = format(database['link'])
-    with utils.suppress(KeyError):
+    with misc.suppress(KeyError):
         result['unlink'] = format(database['unlink'])
 
     return result

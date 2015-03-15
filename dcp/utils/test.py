@@ -4,10 +4,10 @@
 # Testing tools.
 import unittest
 from mock import patch, call, MagicMock
-from dcp.exceptions import NoDatabase, BadConfig, InvalidTargets
+from dcp.utils.exceptions import NoDatabase, BadConfig, InvalidTargets
 
 # To be tested.
-from dcp import options, utils, exceptions, config
+from dcp.utils import options, misc, exceptions, config
 
 
 class Options(unittest.TestCase):
@@ -49,11 +49,11 @@ class Options(unittest.TestCase):
             self.assertEqual(getattr(args, key), value)
 
 
-class Utils(unittest.TestCase):
+class Misc(unittest.TestCase):
     '''
-    Tests for functions in the utils module.
+    Tests for functions in the misc module.
     '''
-    @patch('dcp.utils.logging')
+    @patch('dcp.utils.misc.logging')
     def test_set_log_level(self, logging):
         '''
         Set the log level and ensure the right log level was set.
@@ -69,7 +69,7 @@ class Utils(unittest.TestCase):
 
         # Check the result.
         for level, expected in tests.items():
-            utils.set_log_level(level)
+            misc.set_log_level(level)
             logging.basicConfig.assert_called_with(level=expected)
 
     def test_iter(self):
@@ -85,7 +85,7 @@ class Utils(unittest.TestCase):
 
         # Check the result.
         for test, expected in tests:
-            self.assertEqual(utils.iter(test), expected)
+            self.assertEqual(misc.iter(test), expected)
 
     def test_trap(self):
         '''
@@ -95,7 +95,7 @@ class Utils(unittest.TestCase):
         trigger = MagicMock()
 
         # Perform the test.
-        with utils.trap(trigger, ValueError, KeyError):
+        with misc.trap(trigger, ValueError, KeyError):
             raise ValueError('test')
 
         # Check the result.
@@ -110,7 +110,7 @@ class Utils(unittest.TestCase):
 
         # Perform the test.
         with self.assertRaisesRegexp(KeyError, 'test'):
-            with utils.trap(trigger, ValueError):
+            with misc.trap(trigger, ValueError):
                 raise KeyError('test')
 
         # Check the result.
@@ -122,16 +122,16 @@ class Utils(unittest.TestCase):
         exception is raised.
         '''
         # Create a test class.
-        class Test(utils.IdentityError):
+        class Test(misc.IdentityError):
             pass
 
         # Perform the test.
         with self.assertRaisesRegexp(Test, 'test'):
-            with utils.reraise(ValueError, Test):
+            with misc.reraise(ValueError, Test):
                 raise ValueError('test')
 
-    @patch('dcp.utils.logging')
-    @patch('dcp.utils.sys')
+    @patch('dcp.utils.misc.logging')
+    @patch('dcp.utils.misc.sys')
     def test_catch(self, sys, logging):
         '''
         Catch an exception and log it.
@@ -140,7 +140,7 @@ class Utils(unittest.TestCase):
         exception = ValueError('test')
 
         # Perform the test.
-        with utils.catch(ValueError):
+        with misc.catch(ValueError):
             raise exception
 
         # Check the result.
@@ -152,7 +152,7 @@ class Utils(unittest.TestCase):
         Suppress an exception.
         '''
         # Perform the test.
-        with utils.suppress(ValueError, KeyError):
+        with misc.suppress(ValueError, KeyError):
             raise ValueError('test')
 
 
@@ -172,7 +172,7 @@ class Exceptions(unittest.TestCase):
 
         # Perform the test.
         with self.assertRaisesRegexp(target, 'not found'):
-            with utils.reraise(ValueError, target, name, path):
+            with misc.reraise(ValueError, target, name, path):
                 raise ValueError('test')
 
     def test_bad_config(self):
@@ -184,7 +184,7 @@ class Exceptions(unittest.TestCase):
 
         # Perform the test.
         with self.assertRaisesRegexp(target, 'test'):
-            with utils.reraise(ValueError, target):
+            with misc.reraise(ValueError, target):
                 raise ValueError('test')
 
 
@@ -212,7 +212,7 @@ class Config(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
-    @patch('dcp.config.warning')
+    @patch('dcp.utils.config.warning')
     def test_bad_format(self, warning):
         '''
         Format a misformed configuration.
@@ -308,8 +308,8 @@ class Config(unittest.TestCase):
         for name in ('link', 'unlink'):
             config.database(name, _config)
 
-    @patch('dcp.config.database')
-    @patch('dcp.config.configparser')
+    @patch('dcp.utils.config.database')
+    @patch('dcp.utils.config.configparser')
     def test_parse(self, configparser, database):
         '''
         A mocky test for parse for completion.

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from dcp.utils import IdentityError
+from dcp.utils.misc import IdentityError
 
 
 class NoDatabase(Exception):

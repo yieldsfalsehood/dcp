@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from dcp import options, utils, config
-from dcp.exceptions import NoDatabase, BadConfig, InvalidTargets
+from dcp.utils import options, utils, config
+from dcp.utils.exceptions import NoDatabase, BadConfig, InvalidTargets
 
 
 def main():
