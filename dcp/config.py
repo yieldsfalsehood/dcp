@@ -8,7 +8,7 @@ from jsonschema import ValidationError
 from logging import warning
 
 from dcp import utils
-from dcp.exceptions import NoDatabase, BadConfig
+from dcp.exceptions import NoDatabase, BadConfig, InvalidTargets
 
 
 PATH = '~/.dcp'
@@ -95,6 +95,11 @@ def parse(src, dest):
 
     Returns None if the configuration can't be parsed.
     '''
+    # Check the source and destinations.
+    if src == dest:
+        message = 'The source and destination databases are the same.'
+        raise InvalidTargets(message)
+
     # Create the parser.
     config = configparser.ConfigParser()
     config.read(expanduser(PATH))

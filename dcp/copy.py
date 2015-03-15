@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from dcp import options, utils, config
-from dcp.exceptions import NoDatabase, BadConfig
+from dcp.exceptions import NoDatabase, BadConfig, InvalidTargets
 
 
 def main():
@@ -16,5 +16,5 @@ def main():
     utils.set_log_level(args.log_level)
 
     # Parse the configuration.
-    with utils.catch((NoDatabase, BadConfig)):
+    with utils.catch(NoDatabase, BadConfig, InvalidTargets):
         config.parse(args.source, args.destination)

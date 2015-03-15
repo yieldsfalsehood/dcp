@@ -18,3 +18,10 @@ class BadConfig(IdentityError):
     Raised when a database configuration is bad.
     '''
     pass
+
+
+class InvalidTargets(Exception):
+    '''
+    Raised when the source and destination databases are the same.
+    '''
+    pass
