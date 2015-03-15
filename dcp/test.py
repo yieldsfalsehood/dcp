@@ -308,6 +308,33 @@ class Config(unittest.TestCase):
         for name in ('link', 'unlink'):
             config.database(name, _config)
 
+    @patch('dcp.config.database')
+    @patch('dcp.config.configparser')
+    def test_parse(self, configparser, database):
+        '''
+        A mocky test for parse for completion.
+        '''
+        # Create test data.
+        src = 'src'
+        dest = 'dest'
+        _config = MagicMock()
+        configparser.ConfigParser.return_value = _config
+        database.return_value = 'test'
+
+        # Perform the test.
+        left, right = config.parse(src, dest)
+
+        # Check the result.
+        self.assertEqual(left, 'test')
+        self.assertEqual(right, 'test')
+
+        # Check the database calls.
+        expected = [
+            call('src', _config),
+            call('dest', _config),
+        ]
+        database.assert_has_calls(expected)
+
 
 # Run the tests if the file is called directly.
 if __name__ == '__main__':
