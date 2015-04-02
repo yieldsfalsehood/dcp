@@ -99,7 +99,7 @@ def catch(*exceptions):
 @contextmanager
 def suppress(*exceptions):
     '''
-    Catches, logs and suppresses the list of exceptions.
+    Catches, and suppresses the list of exceptions without logging.
     '''
     # Suppress the exception.
     def trigger(exception):
