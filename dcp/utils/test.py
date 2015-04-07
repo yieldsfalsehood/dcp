@@ -144,7 +144,7 @@ class Misc(unittest.TestCase):
             raise exception
 
         # Check the result.
-        logging.exception.assert_called_once_with(exception)
+        logging.error.assert_called_once_with('test')
         sys.exit.assert_called_once_with(1)
 
     def test_suppress(self):

@@ -88,7 +88,7 @@ def catch(*exceptions):
     '''
     # Log the exception and exit.
     def trigger(exception):
-        logging.exception(exception)
+        logging.error(exception.message)
         sys.exit(1)
 
     # Trap the exception.
