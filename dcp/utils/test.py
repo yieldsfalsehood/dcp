@@ -5,6 +5,7 @@
 import unittest
 from mock import patch, call, MagicMock
 from dcp.utils.exceptions import NoDatabase, BadConfig, InvalidTargets
+from dcp.utils.constants import DCP_ENV
 
 # To be tested.
 from dcp.utils import options, misc, exceptions, config
@@ -192,6 +193,29 @@ class Config(unittest.TestCase):
     '''
     Tests for functions in the config module.
     '''
+    @patch('dcp.utils.config.os')
+    def test_path(self, os):
+        '''
+        Get the path to the config file.
+        '''
+        # Create test data.
+        os.environ = {DCP_ENV: 'test'}
+
+        # Perform the test.
+        result = config.path()
+
+        # Check the result.
+        self.assertEqual(result, 'test')
+
+    @patch('dcp.utils.config.misc')
+    @patch('dcp.utils.config.exists')
+    def test_template(self, exists, misc):
+        '''
+        Create a config file if it doesn't exist. This test is for completion.
+        '''
+        # Perform the test.
+        config.template()
+
     def test_format(self):
         '''
         Format a well formed configuration.
@@ -308,9 +332,10 @@ class Config(unittest.TestCase):
         for name in ('link', 'unlink'):
             config.database(name, _config)
 
+    @patch('dcp.utils.config.template')
     @patch('dcp.utils.config.database')
     @patch('dcp.utils.config.configparser')
-    def test_parse(self, configparser, database):
+    def test_parse(self, configparser, database, template):
         '''
         A mocky test for parse for completion.
         '''

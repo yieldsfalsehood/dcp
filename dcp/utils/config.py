@@ -1,27 +1,29 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+# Used to get the configuration.
+import os
+from os.path import expanduser, exists
+
+# Used to parse and validate the configuration.
 import configparser
-from os.path import expanduser
 import jsonschema
 from jsonschema import ValidationError
+
+# Used to prompt the user.
 from logging import warning
 
+# Misc utils.
 from dcp.utils import misc
 from dcp.utils.exceptions import NoDatabase, BadConfig, InvalidTargets
+from dcp.utils.constants import DCP_ENV, PATH, TEMPLATE, CONFIG_SCHEMA
 
 
-PATH = '~/.dcp'
-SCHEMA = {
-    'type': 'object',
-    'properties': {
-        'dsn': {'type': 'string'},
-        'link': {'type': 'string'},
-        'unlink': {'type': 'string'},
-    },
-    'required': ['dsn'],
-    'additionalProperties': False,
-}
+def path():
+    '''
+    Return the path of the configuration file.
+    '''
+    return os.environ.get(DCP_ENV, PATH)
 
 
 def format(value):
@@ -56,7 +58,7 @@ def database(name, config):
 
     # Validate the database.
     with misc.reraise(ValidationError, BadConfig):
-        jsonschema.validate(dict(database), SCHEMA)
+        jsonschema.validate(dict(database), CONFIG_SCHEMA)
 
     # The overrides are optional.
     result = {'dsn': database['dsn']}
@@ -68,6 +70,15 @@ def database(name, config):
         result['unlink'] = format(database['unlink'])
 
     return result
+
+
+def template():
+    '''
+    If the config file doesn't exist, create it.
+    '''
+    if not exists(path()):
+        with misc.open(path(), 'w') as file:
+            file.write(TEMPLATE)
 
 
 def parse(src, dest):
@@ -99,6 +110,9 @@ def parse(src, dest):
     if src == dest:
         message = 'The source and destination databases are the same.'
         raise InvalidTargets(message)
+
+    # Template the config file.
+    template()
 
     # Create the parser.
     config = configparser.ConfigParser()

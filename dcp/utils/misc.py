@@ -7,6 +7,10 @@ from contextlib import contextmanager
 from collections import Iterable
 
 
+# Used to mock the open builtin.
+open = open
+
+
 def set_log_level(level):
     '''
     Set the log level using a string.

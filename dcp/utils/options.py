@@ -2,30 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-
-
-DESCRIPTION = '''
-Copies data between databases that share similar schemas. Note that database
-parameters need to be configured in ~.dcp first. It takes the following format:
-
-# Name of the databases used as source and destination parameters below.
-[database]
-# The connection string. See the engine configuration section of the sqlalchemy
-# library for details.
-dsn = mysql://user:password@localhost:port/database
-
-# Creates foreign key connections that don't exist in the schema. The key on
-# the left is the reference (from) and the key on the right is the primary
-# (to).
-link =
-    table1:column1 = table2:column1
-    table1:column2 = table3:column1
-
-# Breaks foreign key connections that exist in the schema. The key on the left
-# is the reference (from) and the key on the right is the primary (to).
-unlink =
-    table1:column1 = table2:column1
-'''
+from dcp.utils.constants import DESCRIPTION
 
 
 def parser():
