@@ -23,7 +23,7 @@ def path():
     '''
     Return the path of the configuration file.
     '''
-    return os.environ.get(DCP_ENV, PATH)
+    return expanduser(os.environ.get(DCP_ENV, PATH))
 
 
 def format(value):
@@ -78,7 +78,7 @@ def template():
     '''
     if not exists(path()):
         with misc.open(path(), 'w') as file:
-            file.write(TEMPLATE)
+            file.write(TEMPLATE.strip())
 
 
 def parse(src, dest):
