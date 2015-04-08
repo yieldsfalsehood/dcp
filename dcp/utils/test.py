@@ -4,7 +4,7 @@
 # Testing tools.
 import unittest
 from mock import patch, call, MagicMock
-from dcp.utils.exceptions import NoDatabase, BadConfig, InvalidTargets
+from dcp.utils.exceptions import NoDatabase, BadConfig
 from dcp.utils.constants import DCP_ENV
 
 # To be tested.
@@ -359,19 +359,6 @@ class Config(unittest.TestCase):
             call('dest', _config),
         ]
         database.assert_has_calls(expected)
-
-    def test_parse_same_targets(self):
-        '''
-        The source and destination targets are the same.
-        '''
-        # Create test data.
-        src = 'test'
-        dest = 'test'
-
-        # Perform the test.
-        expected = 'are the same'
-        with self.assertRaisesRegexp(InvalidTargets, expected):
-            config.parse(src, dest)
 
 
 # Run the tests if the file is called directly.

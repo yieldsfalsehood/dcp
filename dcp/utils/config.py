@@ -15,7 +15,7 @@ from logging import warning
 
 # Misc utils.
 from dcp.utils import misc
-from dcp.utils.exceptions import NoDatabase, BadConfig, InvalidTargets
+from dcp.utils.exceptions import NoDatabase, BadConfig
 from dcp.utils.constants import DCP_ENV, PATH, TEMPLATE, CONFIG_SCHEMA
 
 
@@ -106,11 +106,6 @@ def parse(src, dest):
 
     Returns None if the configuration can't be parsed.
     '''
-    # Check the source and destinations.
-    if src == dest:
-        message = 'The source and destination databases are the same.'
-        raise InvalidTargets(message)
-
     # Template the config file.
     template()
 
