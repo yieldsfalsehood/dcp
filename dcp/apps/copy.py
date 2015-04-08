@@ -3,7 +3,7 @@
 
 from dcp.graph import graph
 from dcp.utils import options, misc, config
-from dcp.utils.exceptions import NoDatabase, BadConfig, InvalidTargets
+from dcp.utils.exceptions import NoDatabase, BadConfig
 
 import networkx as nx
 from sqlalchemy import create_engine, MetaData
@@ -19,7 +19,7 @@ def main():
     misc.set_log_level(args.log_level)
 
     # Parse the configuration.
-    with misc.catch(NoDatabase, BadConfig, InvalidTargets):
+    with misc.catch(NoDatabase, BadConfig):
         source, destination = config.parse(args.source, args.destination)
 
         # Get a connection to the source database and reflect all the
