@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import networkx
-from sqlalchemy import  MetaData
+from sqlalchemy import MetaData
 
 
 def foreign_keys(meta, schema):

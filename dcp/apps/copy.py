@@ -19,7 +19,7 @@ def main():
     misc.set_log_level(args.log_level)
 
     # Parse the configuration.
-    with misc.catch(NoDatabase, BadConfig, InvalidTargets):
+    with misc.catch(NoDatabase, BadConfig):
         src, dest = config.parse(args.source, args.destination)
 
     # Connect to the database.
