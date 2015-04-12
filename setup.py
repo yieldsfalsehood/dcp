@@ -31,6 +31,8 @@ setup(
         'setuptools',
         'configparser',
         'jsonschema',
+        'sqlalchemy',
+        'networkx',
     ],
     tests_require=[
         'mock',
