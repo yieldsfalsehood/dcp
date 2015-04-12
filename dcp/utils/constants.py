@@ -41,6 +41,7 @@ TEMPLATE = '''
 # Description for the dcp command line tool.
 DESCRIPTION = '''
 Copies data between databases that share similar schemas. Note that database
-parameters need to be configured in ~.dcp first. It takes the following format:
+parameters need to be configured in ~.dcp first. The ~/.dcp path can be changed
+by setting the DCP environment variable. It takes the following format:
 
 %s''' % TEMPLATE

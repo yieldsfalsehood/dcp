@@ -41,7 +41,7 @@ setup(
     test_suite='nose.collector',
     entry_points={
         'console_scripts': [
-            'dcp.copy = dcp.apps.copy:main',
+            'dcp = dcp.apps.copy:main',
         ],
     },
 )
