@@ -42,6 +42,7 @@ setup(
     entry_points={
         'console_scripts': [
             'dcp = dcp.apps.copy:main',
+            'dout = dcp.apps.dout:main',
         ],
     },
 )
