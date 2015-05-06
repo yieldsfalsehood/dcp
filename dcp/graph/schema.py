@@ -8,6 +8,27 @@ import networkx
 from sqlalchemy import MetaData
 from sqlalchemy.orm import sessionmaker
 
+class hashabledict(dict):
+    '''
+    From https://stackoverflow.com/a/1151705/808806
+    '''
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))
+
+def memoize(func):
+    '''
+    Record which (table, filters) pairs have been queried for already.
+    '''
+    def memoized(self, table, filters=None):
+        hashable_filters = hashabledict(filters)
+        if table not in self._visited or hashable_filters not in self._visited[table]:
+            if table in self._visited:
+                self._visited[table].add(hashable_filters)
+            else:
+                self._visited[table] = set((hashable_filters,))
+            return func(self, table, filters)
+    return memoized
+
 class Schema(object):
     '''
     Encapsulates a database schema, using a digraph for capturing
@@ -35,6 +56,12 @@ class Schema(object):
         self.schema = schema
         self.src = src
 
+        # _visited will contain the pairs (table, filters) for all
+        # queries executed against this schema, to avoid visiting the
+        # same rows of data more than once. Each self._visited[table]
+        # is a set of (hashable) filters.
+        self._visited = {}
+
         # tables is a mapping of table names to SA table objects
         self.tables = {table: meta.tables[table] for table in meta.tables}
 
@@ -45,8 +72,8 @@ class Schema(object):
             # exist. This isn't recoverable, so reraise it.
             child_table = meta.tables[child[0]]
             parent_table = meta.tables[parent[0]]
-            fk_mapping = {}
-            schema.add_edge(parent_table, child_table, fk_mapping)
+            fk_mapping = {child[1]: parent[1]}
+            schema.add_edge(child_table, parent_table, fk_mapping)
 
         # Add edges for foreign keys
         for table in meta.tables:
@@ -107,6 +134,7 @@ class Schema(object):
         for u, v, d in self.schema.in_edges_iter(table, data=True):
             yield u, d
 
+    @memoize
     def _query(self, table, filters=None):
         '''
         Issue a query against `table` using `filters` to filter rows
@@ -123,8 +151,16 @@ class Schema(object):
         else:
             pass
 
+        pk_columns = table.primary_key.columns
+
         for row in query:
-            yield row._asdict()
+            data = row._asdict()
+            pk = {column.name: data[column.name] for column in pk_columns}
+            yield {
+                'table': table.name,
+                'pk': pk,
+                'data': data,
+            }
 
     def _walk_parents(self, table, row, filters=None):
         '''
@@ -134,7 +170,7 @@ class Schema(object):
 
             parent_filters = {}
             for src_col, target_col in edge_data.iteritems():
-                parent_filters[target_col] = row[src_col]
+                parent_filters[target_col] = row['data'][src_col]
 
             for this_row in self._query(parent, parent_filters):
                 for parent_row in self._walk_parents(parent,
@@ -156,7 +192,7 @@ class Schema(object):
             # _walk_parents.
             child_filters = {}
             for src_col, target_col in edge_data.iteritems():
-                child_filters[src_col] = row[target_col]
+                child_filters[src_col] = row['data'][target_col]
 
             for this_row in self._query(child, child_filters):
                 for child_row in self._walk_children(child,

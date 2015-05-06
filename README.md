@@ -21,10 +21,13 @@ on R, and repeat this recursively for children of the children.
 Rows are emitted in dependency-order, such that if they were inserted
 in the same order they'd satisfy all foreign key constraints.
 
-However, uniqueness of the output is not yet in place, and depending
-on the schema and data it is possible for the same row to be emitted
-more than once. For now, any process ingesting the data emitted here
-must account for the possibility of duplicates.
+Memoization is done on the query level to reduce duplicates in the
+returned data, though it is still theoretically possible for
+duplicates to occur. In particular, if a row is the target of two
+separate foreign key dependencies, where each key is dependent on a
+different column of the target table, then the row may be enumerated
+twice. However, FK target columns should be primary keys, so this
+isn't an excessively restrictive requirement.
 
 ## Caveats
 

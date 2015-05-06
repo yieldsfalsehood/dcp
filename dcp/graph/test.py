@@ -42,9 +42,16 @@ CREATE TABLE types (
 ''',
 
 '''
+/*
+ * The distributor here is intentionally a redundant key to
+ * distributors, used to verify that a) manual linking will cause the
+ * edge to appear in the graph and b) the distributor data is properly
+ * memoized and only appears once in the output.
+ */
 CREATE TABLE movie_reviews (
   id bigint PRIMARY KEY,
   movie bigint REFERENCES movies (id),
+  distributor bigint,
   reviewer text NOT NULL,
   review text
 );
@@ -83,11 +90,11 @@ values
 ''',
 
 '''
-insert into movie_reviews (id, movie, reviewer, review)
+insert into movie_reviews (id, movie, reviewer, review, distributor)
 values
-(1,	1,	'hates-action',	'The New Superheroes is super zero'),
-(2,	6,	'loves-kitties',	'Startled Cat is the best movie ever'),
-(3,	7,	'loves-kitties',	'Cute Kitten is even better!')
+(1,	1,	'hates-action',	'The New Superheroes is super zero', 1),
+(2,	6,	'loves-kitties',	'Startled Cat is the best movie ever', 3),
+(3,	7,	'loves-kitties',	'Cute Kitten is even better!', 3)
 ;
 '''
 ]
@@ -122,6 +129,7 @@ class Schema(unittest.TestCase):
         src = {
             'engine': self.engine,
             'link': [
+                (('movie_reviews', 'distributor'), ('distributors', 'id')),
             ],
             'unlink': [
             ],
@@ -129,6 +137,8 @@ class Schema(unittest.TestCase):
         source_schema = schema.Schema(src)
 
         self.checkEdgeExists(source_schema, 'movies', 'distributors')
+        self.checkEdgeExists(source_schema, 'movie_reviews', 'movies')
+        self.checkEdgeExists(source_schema, 'movie_reviews', 'distributors')
 
     def test_data(self):
         '''
@@ -145,20 +155,39 @@ class Schema(unittest.TestCase):
 
         expected = [
             {
-                'id': 3,
-                'name': u'cat videos'
+                'table': 'distributors',
+                'pk': {
+                    'id': 3
+                },
+                'data': {
+                    'id': 3,
+                    'name': u'cat videos'
+                }
             },
             {
-                'distributor': 3,
-                'code': None,
-                'id': 7,
-                'name': u'A Cute Kitten'
+                'table': 'movies',
+                'pk': {
+                    'id': 7
+                },
+                'data': {
+                    'distributor': 3,
+                    'code': None,
+                    'id': 7,
+                    'name': u'A Cute Kitten'
+                }
             },
             {
-                'movie': 7,
-                'review': u'Cute Kitten is even better!',
-                'id': 3,
-                'reviewer': u'loves-kitties'
+                'table': 'movie_reviews',
+                'pk': {
+                    'id': 3
+                },
+                'data': {
+                    'movie': 7,
+                    'review': u'Cute Kitten is even better!',
+                    'id': 3,
+                    'reviewer': u'loves-kitties',
+                    'distributor': 3
+                }
             }
         ]
 
