@@ -31,6 +31,6 @@ def main():
     src['engine'] = create_engine(src['dsn'])
 
     # Extract the source schema.
-    source_schema = schema.Schema(src, dest)
-    for row in source_schema.data(src['source']):
+    source_schema = schema.Schema(src)
+    for row in source_schema.data(args.table):
         print json.dumps(row)

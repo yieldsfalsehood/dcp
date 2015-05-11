@@ -20,13 +20,23 @@ def memoize(func):
     Record which (table, filters) pairs have been queried for already.
     '''
     def memoized(self, table, filters=None):
-        hashable_filters = hashabledict(filters)
+
+        if isinstance(filters, dict):
+            hashable_filters = hashabledict(filters)
+        elif isinstance(filters, list):
+            hashable_filters = hashabledict({"list": filters})
+        elif filters is None:
+            hashable_filters = None
+        else:
+            pass
+
         if table not in self._visited or hashable_filters not in self._visited[table]:
             if table in self._visited:
                 self._visited[table].add(hashable_filters)
             else:
                 self._visited[table] = set((hashable_filters,))
             return func(self, table, filters)
+
     return memoized
 
 class Schema(object):
