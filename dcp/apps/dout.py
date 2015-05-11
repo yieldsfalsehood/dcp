@@ -9,10 +9,6 @@ from sqlalchemy import create_engine
 
 import json
 
-def handler(table):
-    for row in query:
-        pass
-
 def main():
     '''
     Application entry point.
