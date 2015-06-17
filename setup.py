@@ -43,6 +43,7 @@ setup(
         'console_scripts': [
             'dcp = dcp.apps.copy:main',
             'dout = dcp.apps.dout:main',
+            'din = dcp.apps.din:main',
         ],
     },
 )
