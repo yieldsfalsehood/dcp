@@ -6,7 +6,7 @@ from dcp.utils import options, misc, config
 from dcp.utils.exceptions import NoDatabase, BadConfig
 
 from sqlalchemy import create_engine
-
+from sqlalchemy.sql import expression
 
 def main():
     '''
@@ -22,8 +22,17 @@ def main():
     with misc.catch(NoDatabase, BadConfig):
         src, dest = config.parse(args.source, args.destination)
 
-    # Connect to the database.
+    # Connect to the databases.
     src['engine'] = create_engine(src['dsn'])
+    dest['engine'] = create_engine(dest['dsn'])
 
-    # Extract the source schema.
-    schema.get(src, dest)
+    # Extract the schemas.
+    source_schema = schema.Schema(src)
+    dest_schema = schema.Schema(dest)
+
+    for row in source_schema.data(args.table, args.columns):
+        table = dest_schema.tables[row['table']]
+        statement = expression.insert(table,
+                                      values=row['data'],
+                                      inline=True)
+        dest['engine'].execute(statement)
