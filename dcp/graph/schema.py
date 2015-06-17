@@ -6,6 +6,7 @@ from dcp.utils import misc
 import networkx
 
 from sqlalchemy import MetaData
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 
 class hashabledict(dict):
@@ -14,6 +15,10 @@ class hashabledict(dict):
     '''
     def __hash__(self):
         return hash(tuple(sorted(self.items())))
+
+class hashablelist(list):
+    def __hash__(self):
+        return hash(tuple(sorted(self)))
 
 def memoize(func):
     '''
@@ -24,7 +29,7 @@ def memoize(func):
         if isinstance(filters, dict):
             hashable_filters = hashabledict(filters)
         elif isinstance(filters, list):
-            hashable_filters = hashabledict({"list": filters})
+            hashable_filters = hashablelist(filters)
         elif filters is None:
             hashable_filters = None
         else:
@@ -156,6 +161,9 @@ class Schema(object):
             query = self.session.query(table).filter(filters)
         elif isinstance(filters, dict):
             query = self.session.query(table).filter_by(**filters)
+        elif isinstance(filters, list):
+            filters = [text(filter_) for filter_ in filters]
+            query = self.session.query(table).filter(*filters)
         elif filters is None:
             query = self.session.query(table)
         else:

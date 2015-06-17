@@ -28,5 +28,5 @@ def main():
 
     # Extract the source schema.
     source_schema = schema.Schema(src)
-    for row in source_schema.data(args.table):
+    for row in source_schema.data(args.table, args.columns):
         print json.dumps(row)
